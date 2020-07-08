@@ -35,32 +35,28 @@ my $slice = $slice_adaptor -> fetch_by_region("chromosome", $inChrom, $inStart, 
 
 # WVN 5/7/20 Borrowed code to see what we get from this
 # The method coord_system() returns a Bio::EnsEMBL::CoordSystem object
-# my $coord_sys  = $slice->coord_system()->name();
-my $cs_version = $slice->coord_system()->version();
-my $seq_region = $slice->seq_region_name();
-my $start      = $slice->start();
-my $end        = $slice->end();
-# my $strand     = $slice->strand();
+my $csVersion = $slice -> coord_system() -> version();
+my $seqRegion = $slice -> seq_region_name();
+my $start      = $slice -> start();
+my $end        = $slice -> end();
 
 # The example code gets a "chromosome" coordinate system
 # whether it is GRCh37, GRCh38, whatever is the version.
 # Version is GRCh38
-# print "Slice - coord sys: $coord_sys; coord sys version: $cs_version; seq_region: $seq_region; from $start to $end; strand: $strand\n\n";
-print "Starting coordinates for $cs_version: chromosome $seq_region from $start to $end\n\n";
-# print "Slice - coord sys: $coord_sys; coord sys version: $cs_version; seq_region: $seq_region; from $start to $end; strand: $strand\n\n";
+print "Starting coordinates for $csVersion: chromosome $seqRegion from $start to $end\n\n";
 
 # Decided to use "Project" since it is the most general for converting between coordinate system
 foreach my $segment(@{$slice -> project("chromosome", "GRCh37")}){
-# foreach my $segment(@{$slice -> project("chromosome")}){
   my $segSlice = $segment -> to_Slice();
-  my $segSliceCS = $segSlice -> coord_system() -> name();
-  my $segSliceCSVersion = $segSlice -> coord_system() -> version();
   my $segSliceRegion = $segSlice -> seq_region_name();
+  if($segSliceRegion ne $seqRegion){ # Skip instances of segment coordinates transforming to a different region
+    next;
+  }
+  my $segSliceCSVersion = $segSlice -> coord_system() -> version();
   my $segSliceStart = $segSlice -> start();
   my $segSliceEnd = $segSlice -> end();
   my $segSliceStrand     = $segSlice -> strand();
-  print "Transformed segment slice - coord sys: $segSliceCS; coord sys version: $segSliceCSVersion; seq_region: $segSliceRegion from $segSliceStart to $segSliceEnd; strand $segSliceStrand\n";
-  # print "Transformed segment slice coordinates for $segSliceCSVersion; seq_region: $segSliceRegion from $segSliceStart to $segSliceEnd; strand $segSliceStrand\n";
+  print "Transformed segment slice coordinates for $segSliceCSVersion: chromosome $segSliceRegion from $segSliceStart to $segSliceEnd; strand $segSliceStrand\n";
 }
 
 exit 0;
