@@ -9,21 +9,6 @@ use Bio::EnsEMBL::Registry;
 use Bio::EnsEMBL::Utils::Slice;
 use Bio::EnsEMBL::DBSQL::SliceAdaptor;
 
-# Maybe not using any of the packages below
-#use LWP::UserAgent;
-#use Set::Object;
-#use IntervalTree;
-#use List::Util;
-#use JSON;
-#use HTTP::Tiny;
-#use Data::Dumper;
-#
-#use Getopt::Long;
-
-
-# TO DO - has to use Ensembl Core API rather than REST API, I think
-
-# my $usageMessage = "Usage: $0 <in-gene-list-file> <out-bed-file>\n";
 my $usageMessage = "Usage: $0 <in-coord>\n";
 if(@ARGV != 1){
   die $usageMessage;
@@ -39,8 +24,6 @@ my ($inStart, $inEnd) = split(/-/, $inCoord);
 print "Chromosome: $inChrom\n";
 print "start: $inStart end: $inEnd\n";
 
-# my @enspIDs = getEnsemblProteinIDFromContent($responseContent, $geneName, $id);
-
 my $registry = "Bio::EnsEMBL::Registry";
 
 $registry->load_registry_from_db(
@@ -50,7 +33,6 @@ $registry->load_registry_from_db(
 
 my $slice_adaptor = $registry -> get_adaptor("Human", "Core", "Slice");
 # Get the slice for requested coordinates
-# my $slice = $slice_adaptor->fetch_by_region("chromosome", $inChrom, $inStart, $inEnd);
 my $slice = $slice_adaptor -> fetch_by_region("chromosome", $inChrom, $inStart, $inEnd, 1, "GRCh38");
 
 # WVN 5/7/20 Borrowed code to see what we get from this
@@ -62,16 +44,12 @@ my $start      = $slice->start();
 my $end        = $slice->end();
 my $strand     = $slice->strand();
 
-# The example code actually ends up getting a coordinate system with name
-# "chromosome" (got confused...)
+# The example code gets a "chromosome" coordinate system
+# whether it is GRCh37, GRCh38, whatever is the version.
 # Version is GRCh38
-print "Slice - coord sys: $coord_sys coord sys version: $cs_version seq_region: $seq_region $start-$end ($strand)\n";
+print "Slice - coord sys: $coord_sys; coord sys version: $cs_version; seq_region: $seq_region; from $start to $end; strand: $strand\n\n";
 
-
-# Need to use "Transform" method somehow
-# Or "Project" ???
-# Decided to use "Project" since it is the most general
-# GRCh38
+# Decided to use "Project" since it is the most general for converting between coordinate system
 foreach my $segment(@{$slice -> project("chromosome", "GRCh37")}){
 # foreach my $segment(@{$slice -> project("chromosome")}){
   my $segSlice = $segment -> to_Slice();
@@ -81,7 +59,7 @@ foreach my $segment(@{$slice -> project("chromosome", "GRCh37")}){
   my $segSliceStart = $segSlice -> start();
   my $segSliceEnd = $segSlice -> end();
   my $segSliceStrand     = $segSlice -> strand();
-  print "Transformed segment slice - coord sys: $segSliceCS coord sys version: $segSliceCSVersion seq_region: $segSliceRegion $segSliceStart-$segSliceEnd ($segSliceStrand)\n";
+  print "Transformed segment slice - coord sys: $segSliceCS; coord sys version: $segSliceCSVersion; seq_region: $segSliceRegion from $segSliceStart to $segSliceEnd; strand $segSliceStrand\n";
 }
 
 exit 0;
